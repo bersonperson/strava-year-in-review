@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prime Checker</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7dd3fc;--text:#e6eef8}
+    html,body{height:100%;margin:0}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071229, #0b1220);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text)}
+    .card{background:rgba(255,255,255,0.02);padding:28px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);min-width:320px;text-align:center}
+    h1{font-size:16px;margin:0 0 12px;font-weight:600;color:var(--accent)}
+    label{display:block;font-size:13px;margin-bottom:8px;color:rgba(230,238,248,0.9)}
+    input[type=number]{width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(125,211,252,0.14);background:transparent;color:var(--text);font-size:16px;outline:none}
+    .result{margin-top:16px;font-size:15px;min-height:22px}
+    button{margin-top:14px;padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#052027;font-weight:600;cursor:pointer}
+    .small{font-size:12px;color:rgba(230,238,248,0.65);margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>enter any number</h1>
+    <label for="num">Type a whole number and press Enter — returns next prime ≥ input</label>
+    <input id="num" type="number" inputmode="numeric" placeholder="e.g. 13" autocomplete="off" />
+    <div class="result" id="result" aria-live="polite"></div>
+    <button id="restart" style="display:none">Restart</button>
+    <div class="small">Minimal • Press Enter to check • Restart clears</div>
+  </div>
+
+  <script>
+    const input = document.getElementById('num');
+    const result = document.getElementById('result');
+    const restart = document.getElementById('restart');
+
+    function isPrime(n){
+      if (!Number.isInteger(n) || n < 2) return false;
+      if (n % 2 === 0) return n === 2;
+      const r = Math.floor(Math.sqrt(n));
+      for (let i = 3; i <= r; i += 2) if (n % i === 0) return false;
+      return true;
+    }
+
+    function findNextPrime(n){
+      let m = Math.floor(n);
+      if (m < 2) m = 2;
+      while (!isPrime(m)) m++;
+      return m;
+    }
+
+    function showPrimeCheck(){
+      const raw = input.value.trim();
+      if (raw === ''){
+        result.textContent = 'Please enter a number.';
+        return;
+      }
+      const n = Number(raw);
+      if (!Number.isFinite(n) || !Number.isInteger(n)){
+        result.textContent = 'Please enter a valid whole number.';
+        return;
+      }
+      const next = findNextPrime(n);
+      result.textContent = `next prime ≥ ${n}: ${next}`;
+      restart.style.display = 'inline-block';
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        showPrimeCheck();
+      }
+    });
+
+    restart.addEventListener('click', () => {
+      input.value = '';
+      result.textContent = '';
+      restart.style.display = 'none';
+      input.focus();
+    });
+
+    // focus input on load
+    window.addEventListener('load', () => input.focus());
+  </script>
+</body>
+</html>
