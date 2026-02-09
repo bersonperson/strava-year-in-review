@@ -227,31 +227,60 @@
   <!-- SETUP SCREEN -->
   <div id="screen-setup" class="screen">
     <div class="setup-card card glow-card">
-      <h1 class="gradient-text">Your 2025 in Strava</h1>
-      <p class="subtitle">Connect your Strava account to see your year in review</p>
-      <div class="input-group">
-        <label for="input-client-id">Client ID</label>
-        <input id="input-client-id" type="text" placeholder="Your Strava API Client ID" autocomplete="off" />
-      </div>
-      <div class="input-group">
-        <label for="input-client-secret">Client Secret</label>
-        <input id="input-client-secret" type="password" placeholder="Your Strava API Client Secret" autocomplete="off" />
-      </div>
+      <h1 class="gradient-text">2025 in Strava</h1>
+      <p class="subtitle">See a year of activities visualized</p>
+
+      <!-- Primary: Eugene's review -->
       <div style="margin-top: 24px;">
-        <button class="btn-primary" id="btn-connect">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 10 12 15 6"/></svg>
-          Connect with Strava
+        <button class="btn-primary" id="btn-eugene" style="width: 100%; justify-content: center;">
+          Show Eugene's Year in Review
         </button>
       </div>
+
       <div class="divider">or</div>
-      <button class="btn-secondary" id="btn-toggle-token">Paste Access Token Directly</button>
-      <div id="token-section" class="token-section">
-        <div class="input-group" style="margin-top: 16px;">
-          <label for="input-token">Access Token</label>
-          <input id="input-token" type="text" placeholder="Paste your Strava access token" autocomplete="off" />
+
+      <!-- Secondary: Your own -->
+      <button class="btn-secondary" id="btn-show-own" style="width: 100%; justify-content: center;">
+        See Your Own Year in Review
+      </button>
+
+      <div id="own-section" class="token-section">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 16px; margin-top: 16px; text-align: left;">
+          <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; font-weight: 600;">How to get your Strava API credentials:</p>
+          <ol style="color: var(--text-secondary); font-size: 12px; padding-left: 16px; line-height: 1.8;">
+            <li>Go to <a href="https://www.strava.com/settings/api" target="_blank" rel="noopener" style="color: var(--strava-orange); text-decoration: none;">strava.com/settings/api</a></li>
+            <li>If you don't have an app yet, create one (any name/website works)</li>
+            <li>Copy your <strong style="color: var(--text-primary);">Client ID</strong> and <strong style="color: var(--text-primary);">Client Secret</strong></li>
+            <li>Set your <strong style="color: var(--text-primary);">Authorization Callback Domain</strong> to <code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 3px; font-size: 11px;">bersonperson.github.io</code></li>
+            <li>Paste them below and connect!</li>
+          </ol>
         </div>
-        <button class="btn-primary" id="btn-load-token" style="margin-top: 12px; font-size: 14px; padding: 10px 24px;">Load My Data</button>
+
+        <div class="input-group" style="margin-top: 16px;">
+          <label for="input-client-id">Client ID</label>
+          <input id="input-client-id" type="text" placeholder="Your Strava API Client ID" autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="input-client-secret">Client Secret</label>
+          <input id="input-client-secret" type="password" placeholder="Your Strava API Client Secret" autocomplete="off" />
+        </div>
+        <div style="margin-top: 16px;">
+          <button class="btn-primary" id="btn-connect" style="width: 100%; justify-content: center;">
+            Connect with Strava
+          </button>
+        </div>
+
+        <div class="divider">or</div>
+        <button class="btn-secondary" id="btn-toggle-token" style="width: 100%; justify-content: center;">Paste Access Token Directly</button>
+        <div id="token-section" class="token-section">
+          <div class="input-group" style="margin-top: 16px;">
+            <label for="input-token">Access Token</label>
+            <input id="input-token" type="text" placeholder="Paste your Strava access token" autocomplete="off" />
+          </div>
+          <button class="btn-primary" id="btn-load-token" style="margin-top: 12px; font-size: 14px; padding: 10px 24px; width: 100%; justify-content: center;">Load My Data</button>
+        </div>
       </div>
+
       <p style="color: var(--text-muted); font-size: 11px; margin-top: 20px;">
         Powered by Strava. Your credentials are stored locally and never sent to any server other than Strava.
       </p>
@@ -446,6 +475,8 @@
     const REDIRECT_URI = window.location.origin + window.location.pathname;
     const SCOPE = 'read,activity:read_all';
     const PER_PAGE = 200;
+    const DEFAULT_CLIENT_ID = '14617';
+    const DEFAULT_CLIENT_SECRET = 'b38e27fb3e05e60b834aab0293436926e8bbe4f4';
     const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -1232,6 +1263,23 @@
 
     // === EVENT LISTENERS ===
     function setupListeners() {
+      // Eugene's year in review — use default credentials
+      $('#btn-eugene').addEventListener('click', () => {
+        state.clientId = DEFAULT_CLIENT_ID;
+        state.clientSecret = DEFAULT_CLIENT_SECRET;
+        localStorage.setItem('strava_client_id', DEFAULT_CLIENT_ID);
+        localStorage.setItem('strava_client_secret', DEFAULT_CLIENT_SECRET);
+        const url = `${STRAVA_AUTH_URL}?client_id=${DEFAULT_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${SCOPE}&approval_prompt=auto`;
+        window.location.href = url;
+      });
+
+      // Show/hide "your own" section
+      $('#btn-show-own').addEventListener('click', () => {
+        const sec = $('#own-section');
+        sec.classList.toggle('open');
+        $('#btn-show-own').textContent = sec.classList.contains('open') ? 'Hide' : 'See Your Own Year in Review';
+      });
+
       $('#btn-connect').addEventListener('click', startOAuth);
       $('#btn-toggle-token').addEventListener('click', () => {
         const sec = $('#token-section');
